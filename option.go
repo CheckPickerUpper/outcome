@@ -2,32 +2,23 @@ package outcome
 
 // Option is a value of type T that may be absent. Absence is not a failure.
 //
-// Its members are unexported, so an Option is built only by Some, None and the
-// To...Option functions and read only by FoldOption. Its one method mentions
-// T, so an Option[string] cannot be passed as an Option[int].
-//
-//sumtype:decl
-type Option[T any] interface {
-	isOption(T)
+// Its fields are unexported, so an Option is built only by Some, None and the
+// To...Option functions and read only by FoldOption. It is a struct, so no
+// type declared elsewhere can stand in for one, and its zero value, such as
+// an unset struct field, is None.
+type Option[T any] struct {
+	value   T
+	present bool
 }
-
-type some[T any] struct {
-	value T
-}
-
-type none[T any] struct{}
-
-func (some[T]) isOption(T) {}
-func (none[T]) isOption(T) {}
 
 // Some is an Option holding value.
 func Some[T any](value T) Option[T] {
-	return some[T]{value: value}
+	return Option[T]{value: value, present: true}
 }
 
 // None is an Option holding nothing.
 func None[T any]() Option[T] {
-	return none[T]{}
+	return Option[T]{}
 }
 
 // TupleToOption turns a library's (value, present) pair into an Option:
@@ -60,17 +51,10 @@ func PointerToOption[T any](value *T) Option[T] {
 }
 
 // FoldOption reads an Option: onSome receives the value of Some, and onNone is
-// called for None. A nil Option, such as an unset struct field, folds to
-// onNone(), the way a zero samber/mo Option is None. A type outside this
-// package that embeds Option also folds to onNone().
+// called for None, the zero Option included.
 func FoldOption[T, R any](option Option[T], onSome func(T) R, onNone func() R) R {
-	switch member := option.(type) {
-	case some[T]:
-		return onSome(member.value)
-	case none[T]:
-		return onNone()
-	case nil:
-		return onNone()
+	if option.present {
+		return onSome(option.value)
 	}
 	return onNone()
 }

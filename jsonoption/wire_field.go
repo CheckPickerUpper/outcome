@@ -33,7 +33,7 @@ func Absent[T any]() Field[T] {
 // Option is the Field as an outcome.Option: Some for a present Field, None for
 // an absent one, the zero Field included.
 func Option[T any](field Field[T]) outcome.Option[T] {
-	return outcome.FoldOption(field.option, outcome.Some[T], outcome.None[T])
+	return field.option
 }
 
 // FromOption is a Field present when option is Some and absent when it is

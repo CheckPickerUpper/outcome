@@ -90,8 +90,8 @@ func TestFoldOptionCallsTheArmOfEachOption(t *testing.T) {
 	}{
 		{situation: "Some passes its value to onSome", option: outcome.Some(7), want: "some 7"},
 		{situation: "None calls onNone", option: outcome.None[int](), want: "none"},
-		// An unset slice element holds a nil Option, as an unset struct field does.
-		{situation: "a nil Option calls onNone", option: make([]outcome.Option[int], 1)[0], want: "none"},
+		// An unset slice element holds the zero Option, as an unset struct field does.
+		{situation: "the zero Option calls onNone", option: make([]outcome.Option[int], 1)[0], want: "none"},
 		{situation: "a present library pair is Some", option: outcome.TupleToOption(7, true), want: "some 7"},
 		{situation: "an absent library pair is None", option: outcome.TupleToOption(7, false), want: "none"},
 		{situation: "the zero value is None", option: outcome.EmptyableToOption(0), want: "none"},
@@ -186,10 +186,8 @@ func exportedMethods(declared types.Type) []string {
 func TestNoMemberOfResultOrOptionHasAnExportedMethod(t *testing.T) {
 	checked := checkedPackage(t)
 	integer := types.Typ[types.Int]
-	sets := []*types.Interface{
-		methodSet(t, instantiated(t, checked, "Result", integer)),
-		methodSet(t, instantiated(t, checked, "Option", integer)),
-	}
+	result := methodSet(t, instantiated(t, checked, "Result", integer))
+	option := instantiated(t, checked, "Option", integer)
 	members := []string{}
 	for _, name := range checked.Scope().Names() {
 		declared, isTypeName := checked.Scope().Lookup(name).(*types.TypeName)
@@ -201,18 +199,16 @@ func TestNoMemberOfResultOrOptionHasAnExportedMethod(t *testing.T) {
 			continue
 		}
 		member := instantiated(t, checked, name, integer)
-		for _, set := range sets {
-			if !types.Implements(member, set) {
-				continue
-			}
-			members = append(members, name)
-			if methods := exportedMethods(member); len(methods) != 0 {
-				t.Errorf("%s has exported methods %v, want none", name, methods)
-			}
+		if !types.Implements(member, result) && !types.Identical(member, option) {
+			continue
+		}
+		members = append(members, name)
+		if methods := exportedMethods(member); len(methods) != 0 {
+			t.Errorf("%s has exported methods %v, want none", name, methods)
 		}
 	}
-	if !slices.Equal(members, []string{"failed", "none", "ok", "some"}) {
-		t.Fatalf("found members %v, want [failed none ok some]", members)
+	if !slices.Equal(members, []string{"Option", "failed", "ok"}) {
+		t.Fatalf("found members %v, want [Option failed ok]", members)
 	}
 }
 
