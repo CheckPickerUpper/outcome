@@ -57,3 +57,7 @@ type request struct {
 	Name jsonoption.Field[string] `json:"name,omitzero"`
 }
 ```
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
