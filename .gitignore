@@ -1,0 +1,16 @@
+# Agent instructions and notes stay local.
+AGENTS.md
+CLAUDE.md
+.claude/
+.codex/
+_docs/
+
+# Build and test output.
+*.test
+*.out
+/bin/
+
+# Environment files and local scratch.
+.env
+.env.*
+.scratch/
