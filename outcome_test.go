@@ -3,10 +3,12 @@ package outcome_test
 import (
 	"errors"
 	"go/ast"
+	"go/build"
 	"go/importer"
 	"go/parser"
 	"go/token"
 	"go/types"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -128,6 +130,11 @@ func succeeded[T any](t *testing.T, doing string, result outcome.Result[T]) T {
 // read from the declarations a caller links.
 func checkedPackage(t *testing.T) *types.Package {
 	t.Helper()
+	// The source importer finds the standard library through build.Default,
+	// whose GOROOT is empty in a test binary built with -trimpath, so it is
+	// set from the go command that runs the test.
+	goroot := succeeded(t, "asking go env for GOROOT", outcome.TupleToResult(exec.Command("go", "env", "GOROOT").Output()))
+	build.Default.GOROOT = strings.TrimSpace(string(goroot))
 	files := token.NewFileSet()
 	parsed := []*ast.File{}
 	for _, path := range succeeded(t, "listing the package's files", outcome.TupleToResult(filepath.Glob("*.go"))) {
