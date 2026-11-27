@@ -1,4 +1,5 @@
-// Package outcome holds Result and Option, read with Fold and FoldOption.
+// Package outcome holds Result, Either and Option, read with Fold, FoldEither
+// and FoldOption.
 //
 // No type in this package has an exported method, so reflection over a value
 // keeps no method alive in the linked binary, and each generic function is
